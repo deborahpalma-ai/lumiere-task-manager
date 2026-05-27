@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Lumière — Task Manager</title>
+<link rel="manifest" href="manifest.json"/>
+<meta name="theme-color" content="#0a0a0a"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="description" content="Lumière — Elegant task management for your life"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Jost:wght@200;300;400;500;600&family=Cormorant:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<style>
+:root {
+  --black: #0a0a0a;
+  --black2: #111111;
+  --black3: #1a1a1a;
+  --black4: #222222;
+  --black5: #2a2a2a;
+  --gold: #c9a84c;
+  --gold-light: #e2c47a;
+  --gold-pale: #f0d88a;
+  --gold-dim: #8a6e2a;
+  --white: #f5f5f0;
+  --white2: #e8e8e0;
+  --white-dim: #a0a090;
+  --white-ghost: rgba(245,245,240,0.06);
+  --border: rgba(201,168,76,0.15);
+  --border-white: rgba(245,245,240,0.08);
+  --shadow: 0 8px 48px rgba(0,0,0,0.8);
+  --shadow-gold: 0 2px 24px rgba(201,168,76,0.12);
+  --radius: 1px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:"Jost",sans-serif;background:var(--black);color:var(--white);min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(--black2)}::-webkit-scrollbar-thumb{background:var(--gold-dim);border-radius:2px}
+.page{display:none;min-height:100vh}.page.active{display:flex}
+
+/* ── AUTH ── */
+.auth-page{align-items:center;justify-content:center;flex-direction:column;padding:2rem;background:var(--black);position:relative;overflow:hidden}
+.auth-page::before{content:"";position:absolute;top:-40%;left:-20%;width:80%;height:80%;background:radial-gradient(ellipse,rgba(201,168,76,0.04) 0%,transparent 70%);pointer-events:none}
+.auth-page::after{content:"";position:absolute;bottom:-30%;right:-10%;width:60%;height:60%;background:radial-gradient(ellipse,rgba(245,245,240,0.02) 0%,transparent 70%);pointer-events:none}
+.auth-logo{text-align:center;margin-bottom:2.5rem;position:relative;z-index:1}
+.auth-logo .brand-name{font-family:"Playfair Display",serif;font-size:3rem;font-weight:400;font-style:italic;color:var(--gold-light);letter-spacing:0.08em;line-height:1}
+.auth-logo .brand-em{font-family:"Playfair Display",serif;font-style:normal;font-weight:700;color:var(--white)}
+.auth-logo .brand-sub{font-family:"Jost",sans-serif;font-size:0.65rem;font-weight:300;color:var(--white-dim);letter-spacing:0.5em;text-transform:uppercase;margin-top:0.6rem}
+.auth-lang{display:flex;gap:0.3rem;justify-content:center;margin-top:1.2rem}
+.lang-btn{font-size:0.6rem;letter-spacing:0.2em;padding:4px 10px;border:1px solid var(--border-white);background:transparent;color:var(--white-dim);cursor:pointer;font-family:"Jost",sans-serif;transition:all .2s;text-transform:uppercase;font-weight:300}
+.lang-btn.active,.lang-btn:hover{border-color:var(--gold);color:var(--gold-light)}
+.auth-card{background:var(--black2);border:1px solid var(--border-white);padding:2.8rem 3rem;width:100%;max-width:400px;position:relative;z-index:1}
+.auth-card::before{content:"";position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);opacity:.6}
+.auth-card h2{font-family:"Playfair Display",serif;font-size:1.8rem;font-weight:400;color:var(--white);margin-bottom:0.3rem;letter-spacing:0.02em}
+.auth-subtitle{font-size:0.65rem;color:var(--white-dim);letter-spacing:0.3em;text-transform:uppercase;margin-bottom:2rem;font-weight:300}
+.field-group{margin-bottom:1.4rem}
+.field-group label{display:block;font-size:0.6rem;letter-spacing:0.3em;text-transform:uppercase;color:var(--white-dim);margin-bottom:0.5rem;font-weight:400}
+.field-group input,.field-group select,.field-group textarea{width:100%;background:var(--black3);border:1px solid var(--border-white);padding:0.8rem 1rem;font-family:"Jost",sans-serif;font-size:0.88rem;color:var(--white);outline:none;transition:all .2s;font-weight:300}
+.field-group input::placeholder{color:var(--white-dim);opacity:.4}
+.field-group input:focus,.field-group select:focus,.field-group textarea:focus{border-color:var(--gold);background:var(--black4)}
+.field-group select option{background:var(--black3);color:var(--white)}
+.btn-primary{width:100%;background:var(--gold);border:none;color:var(--black);font-family:"Jost",sans-serif;font-size:0.7rem;font-weight:600;letter-spacing:0.35em;text-transform:uppercase;padding:1rem;cursor:pointer;transition:all .3s;margin-top:0.5rem}
+.btn-primary:hover{background:var(--gold-light);transform:translateY(-1px);box-shadow:0 4px 20px rgba(201,168,76,0.3)}
+.btn-ghost{background:transparent;border:1px solid var(--border-white);color:var(--white-dim);font-family:"Jost",sans-serif;font-size:0.7rem;font-weight:300;letter-spacing:0.2em;padding:0.7rem;cursor:pointer;transition:all .2s;margin-top:0.8rem;width:100%;text-transform:uppercase}
+.btn-ghost:hover{border-color:var(--white-dim);color:var(--white)}
+.auth-link{font-size:0.72rem;color:var(--white-dim);text-align:center;margin-top:1.5rem;font-weight:300}
+.auth-link span.clickable{color:var(--gold);cursor:pointer;text-decoration:underline;text-decoration-color:rgba(201,168,76,.3)}
+.code-inputs{display:flex;gap:0.6rem;justify-content:center;margin:1.5rem 0}
+.code-inputs input{width:46px;height:54px;text-align:center;font-family:"Playfair Display",serif;font-size:1.5rem;font-weight:400;background:var(--black3);border:1px solid var(--border-white);color:var(--gold-light);outline:none;transition:all .2s}
+.code-inputs input:focus{border-color:var(--gold);background:var(--black4)}
+.msg-info{font-size:0.78rem;color:var(--white-dim);font-family:"Cormorant",serif;font-style:italic;text-align:center;margin-bottom:1.2rem;line-height:1.7;font-weight:300}
+
+/* ── APP LAYOUT ── */
+.app-layout{flex-direction:row;width:100%}
+.sidebar{width:240px;min-height:100vh;background:var(--black2);border-right:1px solid var(--border-white);display:flex;flex-direction:column;flex-shrink:0;position:relative}
+.sidebar::after{content:"";position:absolute;top:0;right:0;width:1px;height:100%;background:linear-gradient(180deg,transparent,var(--gold) 40%,transparent);opacity:.2}
+.sidebar-logo{padding:2rem 1.5rem 1.5rem;border-bottom:1px solid var(--border-white)}
+.sidebar-logo .brand{font-family:"Playfair Display",serif;font-size:1.3rem;font-weight:400;font-style:italic;color:var(--gold-light);letter-spacing:0.06em}
+.sidebar-logo .brand-sub{font-size:0.55rem;color:var(--white-dim);letter-spacing:0.4em;text-transform:uppercase;margin-top:0.3rem;font-weight:300}
+.sidebar-user{padding:1rem 1.5rem;border-bottom:1px solid var(--border-white);display:flex;align-items:center;gap:.75rem}
+.user-avatar{width:32px;height:32px;border:1px solid var(--gold);display:flex;align-items:center;justify-content:center;font-family:"Playfair Display",serif;font-size:.8rem;color:var(--gold-light);flex-shrink:0;background:var(--black3)}
+.user-name{font-size:.8rem;font-weight:400;color:var(--white);letter-spacing:.05em}
+.user-email{font-size:.62rem;color:var(--white-dim);font-weight:300}
+.sidebar-nav{flex:1;padding:1.2rem 0;overflow-y:auto}
+.nav-section-title{font-size:.55rem;letter-spacing:.4em;text-transform:uppercase;color:var(--white-dim);padding:.8rem 1.5rem .3rem;font-weight:400;opacity:.5}
+.nav-item{display:flex;align-items:center;gap:.7rem;padding:.55rem 1.5rem;cursor:pointer;transition:all .2s;font-size:.78rem;color:var(--white-dim);letter-spacing:.08em;border-left:1px solid transparent;font-weight:300}
+.nav-item:hover{color:var(--white);background:var(--white-ghost)}
+.nav-item.active{color:var(--gold-light);border-left-color:var(--gold);background:rgba(201,168,76,.05)}
+.nav-item svg{width:14px;height:14px;flex-shrink:0;opacity:.7}
+.nav-item.active svg{opacity:1}
+.nav-badge{margin-left:auto;background:var(--gold);color:var(--black);font-size:.55rem;padding:2px 6px;font-weight:600;letter-spacing:.05em}
+.sidebar-bottom{padding:1rem 1.5rem;border-top:1px solid var(--border-white)}
+.lang-selector{display:flex;gap:.3rem}
+
+/* ── MAIN ── */
+.main-content{flex:1;min-height:100vh;overflow-y:auto;background:var(--black)}
+.main-header{padding:1.8rem 2.2rem 1.2rem;border-bottom:1px solid var(--border-white);display:flex;align-items:flex-start;justify-content:space-between;background:var(--black);position:sticky;top:0;z-index:10;gap:1rem}
+.page-title{font-family:"Playfair Display",serif;font-size:1.6rem;font-weight:400;color:var(--white);letter-spacing:.02em}
+.page-title .accent{color:var(--gold-light);font-style:italic}
+.header-meta{font-size:.6rem;color:var(--white-dim);letter-spacing:.25em;text-transform:uppercase;margin-top:.3rem;font-weight:300}
+.btn-add{background:var(--gold);border:none;color:var(--black);font-family:"Jost",sans-serif;font-size:.6rem;font-weight:600;letter-spacing:.3em;text-transform:uppercase;padding:.6rem 1.3rem;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:.4rem;white-space:nowrap}
+.btn-add:hover{background:var(--gold-light);transform:translateY(-1px)}
+.btn-add-ghost{background:transparent;border:1px solid var(--border);color:var(--gold);font-family:"Jost",sans-serif;font-size:.6rem;font-weight:400;letter-spacing:.25em;text-transform:uppercase;padding:.55rem 1.1rem;cursor:pointer;transition:all .2s;white-space:nowrap}
+.btn-add-ghost:hover{border-color:var(--gold-light);color:var(--gold-light)}
+.content-body{padding:2rem 2.2rem}
+.view{display:none}.view.active{display:block}
+
+/* ── STATS ── */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.8rem;margin-bottom:2rem}
+.stat-card{background:var(--black2);border:1px solid var(--border-white);padding:1.2rem 1.4rem;position:relative;overflow:hidden;transition:border-color .2s}
+.stat-card:hover{border-color:var(--border)}
+.stat-card::after{content:"";position:absolute;bottom:0;left:0;right:0;height:1px;background:var(--gold);opacity:.3}
+.stat-label{font-size:.55rem;letter-spacing:.35em;text-transform:uppercase;color:var(--white-dim);margin-bottom:.6rem;font-weight:400}
+.stat-value{font-family:"Playfair Display",serif;font-size:2.2rem;font-weight:400;color:var(--gold-light);line-height:1}
+.stat-desc{font-size:.6rem;color:var(--white-dim);margin-top:.3rem;font-weight:300}
+
+/* ── TASKS ── */
+.section-title{font-family:"Playfair Display",serif;font-size:1.1rem;font-weight:400;color:var(--white);letter-spacing:.03em;margin-bottom:1rem}
+.section-title .sub{font-family:"Cormorant",serif;font-style:italic;font-size:.9rem;color:var(--white-dim);margin-left:.5rem}
+.filter-row{display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:1.2rem}
+.filter-chip{font-size:.58rem;letter-spacing:.2em;text-transform:uppercase;padding:4px 12px;border:1px solid var(--border-white);background:transparent;color:var(--white-dim);cursor:pointer;transition:all .2s;font-family:"Jost",sans-serif;font-weight:300}
+.filter-chip:hover{border-color:var(--white-dim);color:var(--white)}
+.filter-chip.active{border-color:var(--gold);color:var(--gold-light);background:rgba(201,168,76,.06)}
+.task-list{display:flex;flex-direction:column;gap:.5rem}
+.task-item{background:var(--black2);border:1px solid var(--border-white);padding:.95rem 1.1rem;display:flex;align-items:flex-start;gap:.9rem;transition:all .2s;position:relative;cursor:pointer}
+.task-item:hover{border-color:var(--border);background:var(--black3)}
+.task-item.completed{opacity:.45}
+.task-check{width:18px;height:18px;border:1px solid rgba(245,245,240,.2);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .2s;margin-top:2px;cursor:pointer}
+.task-check:hover{border-color:var(--gold)}
+.task-check.done{background:var(--gold);border-color:var(--gold)}
+.task-check.done::after{content:"✓";color:var(--black);font-size:.6rem;font-weight:700}
+.task-body{flex:1;min-width:0}
+.task-title-text{font-size:.85rem;font-weight:400;color:var(--white);letter-spacing:.03em;margin-bottom:.25rem}
+.task-item.completed .task-title-text{text-decoration:line-through;color:var(--white-dim)}
+.task-meta{display:flex;align-items:center;gap:.7rem;flex-wrap:wrap}
+.task-cat{font-size:.58rem;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);font-weight:400}
+.task-member{display:flex;align-items:center;gap:.3rem;font-size:.68rem;color:var(--white-dim);font-weight:300}
+.member-dot{width:6px;height:6px;border-radius:50%}
+.task-date{font-size:.62rem;color:var(--white-dim);font-family:"Cormorant",serif;font-style:italic}
+.task-reminder-badge{font-size:.55rem;padding:2px 7px;border:1px solid rgba(201,168,76,.4);color:var(--gold);letter-spacing:.1em}
+.task-priority-bar{width:2px;position:absolute;left:0;top:0;bottom:0}
+.priority-high{background:#e05555}.priority-med{background:var(--gold)}.priority-low{background:var(--white-dim)}
+.task-actions{display:flex;gap:.25rem;flex-shrink:0;opacity:0;transition:opacity .2s}
+.task-item:hover .task-actions{opacity:1}
+.task-btn{background:transparent;border:1px solid var(--border-white);width:24px;height:24px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.7rem;transition:all .2s;color:var(--white-dim)}
+.task-btn:hover{border-color:var(--gold);color:var(--gold)}
+.task-btn.del:hover{border-color:#e05555;color:#e05555}
+
+/* ── CATEGORIES ── */
+.categories-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.8rem;margin-bottom:2rem}
+.cat-card{background:var(--black2);border:1px solid var(--border-white);padding:1.4rem;cursor:pointer;transition:all .2s;position:relative}
+.cat-card:hover{border-color:var(--border);transform:translateY(-1px)}
+.cat-card.selected{border-color:var(--gold);background:rgba(201,168,76,.04)}
+.cat-card::before{content:"";position:absolute;bottom:0;left:0;right:0;height:1px;background:var(--gold);opacity:0;transition:opacity .2s}
+.cat-card:hover::before,.cat-card.selected::before{opacity:.4}
+.cat-icon{font-size:1.5rem;margin-bottom:.6rem}
+.cat-name{font-family:"Playfair Display",serif;font-size:.95rem;font-weight:400;color:var(--white);margin-bottom:.2rem}
+.cat-count{font-size:.6rem;color:var(--white-dim);letter-spacing:.2em;text-transform:uppercase;font-weight:300}
+
+/* ── MEMBERS ── */
+.members-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:.8rem;margin-bottom:2rem}
+.member-card{background:var(--black2);border:1px solid var(--border-white);padding:1.3rem 1rem;text-align:center;cursor:pointer;transition:all .2s;position:relative}
+.member-card:hover{border-color:var(--border);transform:translateY(-1px)}
+.member-card.selected{border-color:var(--gold);background:rgba(201,168,76,.04)}
+.member-avatar-lg{width:44px;height:44px;border:1px solid var(--border);margin:0 auto .7rem;display:flex;align-items:center;justify-content:center;font-family:"Playfair Display",serif;font-size:1rem;font-weight:400;transition:all .2s}
+.member-card:hover .member-avatar-lg{border-color:var(--gold)}
+.member-card.selected .member-avatar-lg{border-color:var(--gold);background:rgba(201,168,76,.1)}
+.member-card-name{font-family:"Playfair Display",serif;font-size:.95rem;font-weight:400;color:var(--white);margin-bottom:.15rem}
+.member-card-role{font-size:.58rem;color:var(--white-dim);letter-spacing:.2em;text-transform:uppercase;font-weight:300}
+.member-card-tasks{margin-top:.5rem;font-size:.65rem;color:var(--white-dim);font-weight:300}
+.member-badge-count{position:absolute;top:8px;right:8px;background:var(--gold);color:var(--black);font-size:.55rem;padding:2px 5px;font-weight:700}
+.btn-member-add{background:transparent;border:1px dashed var(--border-white);color:var(--white-dim);font-family:"Jost",sans-serif;font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;padding:.6rem 1rem;cursor:pointer;transition:all .2s;width:100%}
+.btn-member-add:hover{border-color:var(--gold);color:var(--gold)}
+
+/* ── MODAL ── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:100;align-items:center;justify-content:center;padding:1rem}
+.modal-overlay.open{display:flex}
+.modal{background:var(--black2);border:1px solid var(--border-white);padding:2.2rem;width:100%;max-width:480px;max-height:88vh;overflow-y:auto;position:relative}
+.modal::before{content:"";position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);opacity:.6}
+.modal h3{font-family:"Playfair Display",serif;font-size:1.4rem;font-weight:400;color:var(--white);margin-bottom:.2rem}
+.modal-sub{font-size:.6rem;color:var(--white-dim);letter-spacing:.3em;text-transform:uppercase;margin-bottom:1.8rem;font-weight:300}
+.modal-close{position:absolute;top:1rem;right:1rem;background:transparent;border:none;color:var(--white-dim);font-size:1rem;cursor:pointer;padding:4px;transition:color .2s;line-height:1}
+.modal-close:hover{color:var(--white)}
+.assignees-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:.4rem}
+.assignee-option{display:flex;align-items:center;gap:.5rem;padding:.55rem .7rem;border:1px solid var(--border-white);cursor:pointer;transition:all .2s;font-size:.78rem;color:var(--white-dim);font-weight:300}
+.assignee-option:hover{border-color:var(--white-dim);color:var(--white)}
+.assignee-option.selected{border-color:var(--gold);color:var(--gold-light);background:rgba(201,168,76,.06)}
+.mini-av{width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-family:"Playfair Display",serif;font-size:.65rem;flex-shrink:0;border:1px solid var(--border-white)}
+.modal-footer{display:flex;gap:.6rem;margin-top:1.8rem}
+.btn-cancel{flex:1;background:transparent;border:1px solid var(--border-white);color:var(--white-dim);font-family:"Jost",sans-serif;font-size:.65rem;letter-spacing:.15em;text-transform:uppercase;padding:.7rem;cursor:pointer;transition:all .2s;font-weight:300}
+.btn-cancel:hover{border-color:var(--white-dim);color:var(--white)}
+.btn-save{flex:2;background:var(--gold);border:none;color:var(--black);font-family:"Jost",sans-serif;font-size:.65rem;font-weight:600;letter-spacing:.3em;text-transform:uppercase;padding:.7rem;cursor:pointer;transition:all .2s}
+.btn-save:hover{background:var(--gold-light)}
+
+/* ── TOAST ── */
+.reminder-toast{position:fixed;bottom:2rem;right:2rem;background:var(--black2);border:1px solid var(--gold);padding:1.2rem 1.5rem;z-index:999;min-width:280px;box-shadow:var(--shadow),0 0 30px rgba(201,168,76,.15);display:none;animation:slideIn .3s ease}
+.reminder-toast.show{display:block}
+@keyframes slideIn{from{transform:translateX(20px);opacity:0}to{transform:translateX(0);opacity:1}}
+.reminder-toast::before{content:"";position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+.toast-header{display:flex;align-items:center;gap:.5rem;margin-bottom:.4rem}
+.toast-brand{font-family:"Playfair Display",serif;font-size:.7rem;font-style:italic;color:var(--gold-light);letter-spacing:.1em}
+.toast-body{font-size:.82rem;color:var(--white);margin-bottom:.2rem;font-weight:300}
+.toast-time{font-family:"Cormorant",serif;font-size:.72rem;color:var(--white-dim);font-style:italic}
+.toast-close{position:absolute;top:.6rem;right:.8rem;background:none;border:none;color:var(--white-dim);cursor:pointer;font-size:.85rem}
+
+/* ── LOG ── */
+.log-list{display:flex;flex-direction:column;gap:.4rem}
+.log-item{background:var(--black2);border:1px solid var(--border-white);padding:.8rem 1.1rem;display:flex;align-items:center;gap:1rem;font-size:.78rem}
+.log-date{font-family:"Cormorant",serif;font-size:.75rem;color:var(--gold);font-style:italic;min-width:120px;font-weight:300}
+.log-task{flex:1;color:var(--white);font-weight:300}
+.log-user{color:var(--white-dim);font-size:.65rem;letter-spacing:.1em}
+.divider{height:1px;background:linear-gradient(90deg,transparent,rgba(201,168,76,.2),transparent);margin:1.5rem 0}
+.empty-state{text-align:center;padding:3.5rem 1rem;color:var(--white-dim);font-family:"Cormorant",serif;font-style:italic;font-size:1.05rem;font-weight:300}
+.notif-banner{background:var(--black3);border:1px solid var(--border);padding:.8rem 1.1rem;margin-bottom:1.5rem;display:flex;align-items:center;justify-content:space-between;gap:1rem}
+.notif-text{font-size:.72rem;color:var(--white-dim);font-weight:300}
+.btn-notif{background:var(--gold);border:none;color:var(--black);font-family:"Jost",sans-serif;font-size:.58rem;font-weight:600;letter-spacing:.2em;text-transform:uppercase;padding:.4rem .9rem;cursor:pointer;white-space:nowrap}
+
+/* ── MEMBER MODAL ── */
+.color-picker{display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.5rem}
+.color-swatch{width:28px;height:28px;cursor:pointer;border:2px solid transparent;transition:all .2s}
+.color-swatch.selected{border-color:var(--white)}
+
+/* ── RESPONSIVE ── */
+@media(max-width:900px){.sidebar{width:200px}.stats-row{grid-template-columns:repeat(2,1fr)}.categories-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:768px),(pointer:coarse){
+  .app-layout{flex-direction:column}
+  .sidebar{width:100%;min-height:unset;position:fixed;bottom:0;left:0;right:0;height:58px;z-index:50;flex-direction:row;border-right:none;border-top:1px solid var(--border-white)}
+  .sidebar::after{display:none}
+  .sidebar-logo,.sidebar-user,.sidebar-bottom{display:none}
+  .sidebar-nav{flex:1;display:flex;flex-direction:row;padding:0;overflow-x:auto;overflow-y:hidden;align-items:center;justify-content:space-around}
+  .nav-section-title{display:none}
+  .nav-item{flex-direction:column;padding:.35rem .4rem;font-size:.48rem;border-left:none;border-top:2px solid transparent;min-width:48px;justify-content:center;align-items:center;gap:.18rem;letter-spacing:.03em}
+  .nav-item.active{border-top-color:var(--gold);border-left:none;background:rgba(201,168,76,.05)}
+  .nav-item svg{width:17px;height:17px}
+  .nav-badge{position:absolute;top:3px;right:3px;width:13px;height:13px;padding:0;display:flex;align-items:center;justify-content:center;font-size:.48rem}
+  .main-content{padding-bottom:66px}
+  .main-header{padding:.9rem 1rem .7rem;flex-wrap:wrap;gap:.5rem}
+  .page-title{font-size:1.3rem}
+  .content-body{padding:.9rem 1rem}
+  .stats-row{grid-template-columns:repeat(2,1fr);gap:.5rem;margin-bottom:1.2rem}
+  .stat-value{font-size:1.8rem}
+  .categories-grid{grid-template-columns:repeat(2,1fr);gap:.5rem}
+  .members-grid{grid-template-columns:repeat(2,1fr);gap:.5rem}
+  .task-actions{opacity:1;flex-direction:row}
+  .modal{padding:1.4rem 1.1rem;max-height:92vh}
+  .reminder-toast{bottom:66px;right:.7rem;left:.7rem;min-width:unset}
+  .notif-banner{flex-direction:column;align-items:flex-start;gap:.5rem}
+  .log-item{flex-direction:column;align-items:flex-start;gap:.25rem}
+  .log-date{min-width:unset}
+  .auth-card{padding:1.8rem 1.4rem}
+  .auth-logo .brand-name{font-size:2.4rem}
+  .code-inputs input{width:40px;height:50px;font-size:1.3rem}
+  .code-inputs{gap:.4rem}
+  #overview-greeting{font-size:1.3rem}
+}
+</style>
+</head>
+<body>
+<!-- LOGIN -->
+<div class="page auth-page active" id="page-login">
+  <div class="auth-logo">
+    <div class="brand-name"><span class="brand-em">L</span>umière</div>
+    <div class="brand-sub" id="auth-tagline"></div>
+    <div class="auth-lang">
+      <button class="lang-btn active" onclick="setLang('pt')">PT</button>
+      <button class="lang-btn" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" onclick="setLang('es')">ES</button>
+    </div>
+  </div>
+  <div class="auth-card">
+    <h2 id="login-title"></h2>
+    <div class="auth-subtitle" id="login-sub"></div>
+    <div class="field-group"><label id="lbl-email"></label><input type="email" id="login-email"/></div>
+    <div class="field-group"><label id="lbl-pass"></label><input type="password" id="login-pass"/></div>
+    <button class="btn-primary" id="btn-login" onclick="doLogin()"></button>
+    <button class="btn-ghost" id="btn-forgot-link" onclick="showPage('page-forgot')"></button>
+    <div class="auth-link" style="margin-top:1.2rem"><span id="link-no-account"></span> <span class="clickable" onclick="showPage('page-register')" id="link-to-register"></span></div>
+  </div>
+</div>
+<!-- REGISTER -->
+<div class="page auth-page" id="page-register">
+  <div class="auth-logo">
+    <div class="brand-name"><span class="brand-em">L</span>umière</div>
+    <div class="brand-sub" id="reg-tagline"></div>
+    <div class="auth-lang">
+      <button class="lang-btn active" onclick="setLang('pt')">PT</button>
+      <button class="lang-btn" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" onclick="setLang('es')">ES</button>
+    </div>
+  </div>
+  <div class="auth-card">
+    <h2 id="reg-title"></h2>
+    <div class="auth-subtitle" id="reg-sub"></div>
+    <div class="field-group"><label id="lbl-name"></label><input type="text" id="reg-name"/></div>
+    <div class="field-group"><label id="lbl-email2"></label><input type="email" id="reg-email"/></div>
+    <div class="field-group"><label id="lbl-pass2"></label><input type="password" id="reg-pass"/></div>
+    <button class="btn-primary" id="btn-register" onclick="doRegister()"></button>
+    <div class="auth-link" style="margin-top:1.2rem"><span id="link-have-account"></span> <span class="clickable" onclick="showPage('page-login')" id="link-to-login"></span></div>
+  </div>
+</div>
+<!-- VERIFY -->
+<div class="page auth-page" id="page-verify">
+  <div class="auth-logo">
+    <div class="brand-name"><span class="brand-em">L</span>umière</div>
+    <div class="brand-sub" id="verify-tagline"></div>
+    <div class="auth-lang">
+      <button class="lang-btn active" onclick="setLang('pt')">PT</button>
+      <button class="lang-btn" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" onclick="setLang('es')">ES</button>
+    </div>
+  </div>
+  <div class="auth-card">
+    <h2 id="verify-title"></h2>
+    <div class="auth-subtitle" id="verify-sub"></div>
+    <p class="msg-info" id="verify-msg"></p>
+    <div class="code-inputs">
+      <input type="text" maxlength="1" class="vcode" oninput="codeNav(this,0,'vcode')"/>
+      <input type="text" maxlength="1" class="vcode" oninput="codeNav(this,1,'vcode')"/>
+      <input type="text" maxlength="1" class="vcode" oninput="codeNav(this,2,'vcode')"/>
+      <input type="text" maxlength="1" class="vcode" oninput="codeNav(this,3,'vcode')"/>
+      <input type="text" maxlength="1" class="vcode" oninput="codeNav(this,4,'vcode')"/>
+      <input type="text" maxlength="1" class="vcode" oninput="codeNav(this,5,'vcode')"/>
+    </div>
+    <button class="btn-primary" id="btn-verify" onclick="verifyCode()"></button>
+    <div class="auth-link" style="margin-top:1rem"><span class="clickable" onclick="resendCode()" id="link-resend"></span></div>
+  </div>
+</div>
+<!-- FORGOT -->
+<div class="page auth-page" id="page-forgot">
+  <div class="auth-logo">
+    <div class="brand-name"><span class="brand-em">L</span>umière</div>
+    <div class="brand-sub" id="forgot-tagline"></div>
+    <div class="auth-lang">
+      <button class="lang-btn active" onclick="setLang('pt')">PT</button>
+      <button class="lang-btn" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" onclick="setLang('es')">ES</button>
+    </div>
+  </div>
+  <div class="auth-card">
+    <h2 id="forgot-title"></h2>
+    <div class="auth-subtitle" id="forgot-sub"></div>
+    <div class="field-group"><label id="lbl-email3"></label><input type="email" id="forgot-email"/></div>
+    <button class="btn-primary" id="btn-send-code" onclick="doForgot()"></button>
+    <button class="btn-ghost" id="btn-back-login" onclick="showPage('page-login')"></button>
+  </div>
+</div>
+<!-- RESET -->
+<div class="page auth-page" id="page-reset">
+  <div class="auth-logo">
+    <div class="brand-name"><span class="brand-em">L</span>umière</div>
+    <div class="brand-sub" id="reset-tagline"></div>
+    <div class="auth-lang">
+      <button class="lang-btn active" onclick="setLang('pt')">PT</button>
+      <button class="lang-btn" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" onclick="setLang('es')">ES</button>
+    </div>
+  </div>
+  <div class="auth-card">
+    <h2 id="reset-title"></h2>
+    <div class="auth-subtitle" id="reset-sub"></div>
+    <div class="field-group"><label id="lbl-email4"></label><input type="email" id="reset-email"/></div>
+    <p class="msg-info" id="reset-code-msg"></p>
+    <div class="code-inputs">
+      <input type="text" maxlength="1" class="rcode" oninput="codeNav(this,0,'rcode')"/>
+      <input type="text" maxlength="1" class="rcode" oninput="codeNav(this,1,'rcode')"/>
+      <input type="text" maxlength="1" class="rcode" oninput="codeNav(this,2,'rcode')"/>
+      <input type="text" maxlength="1" class="rcode" oninput="codeNav(this,3,'rcode')"/>
+      <input type="text" maxlength="1" class="rcode" oninput="codeNav(this,4,'rcode')"/>
+      <input type="text" maxlength="1" class="rcode" oninput="codeNav(this,5,'rcode')"/>
+    </div>
+    <div class="field-group"><label id="lbl-newpass"></label><input type="password" id="new-pass"/></div>
+    <div class="field-group"><label id="lbl-confirmpass"></label><input type="password" id="confirm-pass"/></div>
+    <button class="btn-primary" id="btn-reset" onclick="doReset()"></button>
+  </div>
+</div>
+<!-- APP -->
+<div class="page app-layout" id="page-app">
+  <nav class="sidebar">
+    <div class="sidebar-logo"><div class="brand"><em>L</em>umière</div><div class="brand-sub" id="sidebar-tagline"></div></div>
+    <div class="sidebar-user">
+      <div class="user-avatar" id="sidebar-avatar">L</div>
+      <div><div class="user-name" id="sidebar-name"></div><div class="user-email" id="sidebar-email"></div></div>
+    </div>
+    <div class="sidebar-nav">
+      <div class="nav-section-title" id="nav-sec-main"></div>
+      <div class="nav-item active" onclick="showView('overview')" data-view="overview">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
+        <span id="nav-overview"></span>
+      </div>
+      <div class="nav-item" onclick="showView('tasks')" data-view="tasks">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+        <span id="nav-tasks"></span><span class="nav-badge" id="pending-badge">0</span>
+      </div>
+      <div class="nav-item" onclick="showView('categories')" data-view="categories">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        <span id="nav-categories"></span>
+      </div>
+      <div class="nav-item" onclick="showView('members')" data-view="members">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+        <span id="nav-members"></span>
+      </div>
+      <div class="nav-section-title" id="nav-sec-records"></div>
+      <div class="nav-item" onclick="showView('history')" data-view="history">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>
+        <span id="nav-history"></span>
+      </div>
+      <div class="nav-item" onclick="showView('reminders')" data-view="reminders">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+        <span id="nav-reminders"></span>
+      </div>
+      <div class="nav-section-title" id="nav-sec-settings"></div>
+      <div class="nav-item" onclick="doLogout()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        <span id="nav-logout"></span>
+      </div>
+    </div>
+    <div class="sidebar-bottom">
+      <div style="font-size:.52rem;letter-spacing:.3em;color:var(--white-dim);margin-bottom:.4rem;text-transform:uppercase;font-weight:300">Language</div>
+      <div class="lang-selector">
+        <button class="lang-btn active" onclick="setLang('pt')">PT</button>
+        <button class="lang-btn" onclick="setLang('en')">EN</button>
+        <button class="lang-btn" onclick="setLang('es')">ES</button>
+      </div>
+    </div>
+  </nav>
+  <div class="main-content">
+    <!-- OVERVIEW -->
+    <div class="view active" id="view-overview">
+      <div class="main-header">
+        <div><div class="page-title" id="overview-greeting"></div><div class="header-meta" id="overview-date"></div></div>
+        <button class="btn-add" onclick="openModal()"><span id="btn-new-task-ov"></span></button>
+      </div>
+      <div class="content-body">
+        <div id="notif-banner-ov"></div>
+        <div class="stats-row" id="stats-row"></div>
+        <div class="divider"></div>
+        <div class="section-title" id="title-today"></div>
+        <div class="task-list" id="today-tasks"></div>
+        <div class="divider"></div>
+        <div class="section-title" id="title-upcoming"></div>
+        <div class="task-list" id="upcoming-tasks"></div>
+      </div>
+    </div>
+    <!-- TASKS -->
+    <div class="view" id="view-tasks">
+      <div class="main-header">
+        <div><div class="page-title"><span id="page-title-tasks"></span></div></div>
+        <button class="btn-add" onclick="openModal()"><span id="btn-new-task-tk"></span></button>
+      </div>
+      <div class="content-body">
+        <div class="filter-row" id="task-filters"></div>
+        <div class="task-list" id="all-tasks"></div>
+      </div>
+    </div>
+    <!-- CATEGORIES -->
+    <div class="view" id="view-categories">
+      <div class="main-header">
+        <div><div class="page-title"><span id="page-title-categories"></span></div></div>
+        <button class="btn-add" onclick="openModal()"><span id="btn-new-task-cat"></span></button>
+      </div>
+      <div class="content-body">
+        <div class="categories-grid" id="categories-grid"></div>
+        <div class="divider"></div>
+        <div class="section-title" id="title-cat-tasks"></div>
+        <div class="task-list" id="cat-tasks"></div>
+      </div>
+    </div>
+    <!-- MEMBERS -->
+    <div class="view" id="view-members">
+      <div class="main-header">
+        <div><div class="page-title"><span id="page-title-members"></span></div></div>
+        <button class="btn-add-ghost" onclick="openMemberModal()"><span id="btn-new-member"></span></button>
+      </div>
+      <div class="content-body">
+        <div class="members-grid" id="members-grid"></div>
+        <div class="divider"></div>
+        <div class="section-title" id="title-member-tasks"></div>
+        <div class="task-list" id="member-tasks"></div>
+      </div>
+    </div>
+    <!-- HISTORY -->
+    <div class="view" id="view-history">
+      <div class="main-header"><div class="page-title"><span id="page-title-history"></span></div></div>
+      <div class="content-body"><div class="log-list" id="log-list"></div></div>
+    </div>
+    <!-- REMINDERS -->
+    <div class="view" id="view-reminders">
+      <div class="main-header">
+        <div><div class="page-title"><span id="page-title-reminders"></span></div></div>
+        <button class="btn-add-ghost" onclick="testReminder()">&#x1F514; <span id="btn-test-reminder"></span></button>
+      </div>
+      <div class="content-body"><div id="notif-banner-rm"></div><div class="task-list" id="reminder-list"></div></div>
+    </div>
+  </div>
+</div>
+<!-- TASK MODAL -->
+<div class="modal-overlay" id="task-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">&#x2715;</button>
+    <h3 id="modal-title"></h3>
+    <div class="modal-sub" id="modal-sub"></div>
+    <div class="field-group"><label id="lbl-task-name"></label><input type="text" id="task-name-input"/></div>
+    <div class="field-group"><label id="lbl-cat"></label><select id="task-cat-select"></select></div>
+    <div class="field-group"><label id="lbl-priority"></label>
+      <select id="task-priority-select">
+        <option value="high" id="opt-high"></option>
+        <option value="med" selected id="opt-med"></option>
+        <option value="low" id="opt-low"></option>
+      </select>
+    </div>
+    <div class="field-group"><label id="lbl-assign"></label><div class="assignees-grid" id="assignees-grid"></div></div>
+    <div class="field-group"><label id="lbl-reminder-modal"></label><input type="datetime-local" id="task-reminder"/></div>
+    <div class="field-group"><label id="lbl-notes"></label><textarea id="task-notes" rows="3"></textarea></div>
+    <div class="modal-footer">
+      <button class="btn-cancel" id="btn-cancel-modal" onclick="closeModal()"></button>
+      <button class="btn-save" id="btn-save-modal" onclick="saveTask()"></button>
+    </div>
+  </div>
+</div>
+
+<!-- MEMBER MODAL -->
+<div class="modal-overlay" id="member-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeMemberModal()">&#x2715;</button>
+    <h3 id="member-modal-title"></h3>
+    <div class="modal-sub" id="member-modal-sub"></div>
+    <div class="field-group"><label id="lbl-member-name"></label><input type="text" id="member-name-input"/></div>
+    <div class="field-group">
+      <label id="lbl-member-color"></label>
+      <div class="color-picker" id="color-picker"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeMemberModal()" id="btn-cancel-member"></button>
+      <button class="btn-save" onclick="saveMember()" id="btn-save-member"></button>
+    </div>
+  </div>
+</div>
+<!-- TOAST -->
+<div class="reminder-toast" id="reminder-toast">
+  <button class="toast-close" onclick="closeToast()">&#x2715;</button>
+  <div class="toast-header"><span>&#x1F514;</span><span class="toast-brand">Lumière</span></div>
+  <div class="toast-body" id="toast-body"></div>
+  <div class="toast-time" id="toast-time"></div>
+</div>
+<script>
+const T={
+pt:{tagline:"Illuminate your life",sidebar_tagline:"Task Manager",login_title:"Entrar",login_sub:"Bem-vindo de volta",reg_title:"Criar Conta",reg_sub:"Comece sua jornada",reg_tagline:"Criar Conta",verify_title:"Verificar E-mail",verify_sub:"Insira o código recebido",verify_tagline:"Verificação",verify_msg:"Um código de 6 dígitos foi gerado.",forgot_title:"Recuperar Senha",forgot_sub:"Vamos redefinir sua senha",forgot_tagline:"Recuperar Senha",reset_title:"Nova Senha",reset_sub:"Crie uma senha segura",reset_tagline:"Nova Senha",reset_code_msg:"Insira o código de 6 dígitos:",lbl_email:"E-mail",lbl_pass:"Senha",lbl_name:"Nome",lbl_newpass:"Nova senha",lbl_confirmpass:"Confirmar senha",btn_login:"Entrar",btn_register:"Criar Conta",btn_verify:"Verificar",btn_send_code:"Enviar Código",btn_back_login:"Voltar ao Login",btn_reset:"Redefinir Senha",btn_forgot_link:"Esqueci minha senha",link_no_account:"Não tem conta?",link_to_register:"Criar conta",link_have_account:"Já tem conta?",link_to_login:"Entrar",link_resend:"Reenviar código",nav_main:"Principal",nav_overview:"Visão Geral",nav_tasks:"Tarefas",nav_categories:"Categorias",nav_members:"Moradores",nav_records:"Registros",nav_history:"Histórico",nav_reminders:"Lembretes",nav_settings:"Configurações",nav_logout:"Sair",new_task:"+ Nova Tarefa",new_cat:"+ Categoria",new_member:"+ Morador",greeting_morning:"Bom dia",greeting_afternoon:"Boa tarde",greeting_evening:"Boa noite",title_today:"Hoje",title_upcoming:"Em breve",title_tasks:"Todas as Tarefas",title_categories:"Categorias",title_members:"Moradores",title_history:"Histórico",title_reminders:"Lembretes",title_cat_tasks:"Tarefas da Categoria",title_member_tasks:"Tarefas do Morador",modal_title:"Nova Tarefa",modal_sub:"Adicionar tarefa",modal_edit_title:"Editar Tarefa",modal_edit_sub:"Atualizar informações",cat_modal_title:"Nova Categoria",cat_modal_sub:"Organizar seu trabalho",member_modal_title:"Novo Morador",member_modal_sub:"Adicionar morador",lbl_task_name:"Nome da tarefa",lbl_cat:"Categoria",lbl_priority:"Prioridade",lbl_assign:"Atribuir a",lbl_reminder:"Lembrete",lbl_notes:"Notas",lbl_cat_name:"Nome",lbl_cat_icon:"Ícone (emoji)",lbl_member_name:"Nome",lbl_member_role:"",lbl_member_color:"Cor",opt_high:"Alta",opt_med:"Média",opt_low:"Baixa",btn_cancel:"Cancelar",btn_save:"Salvar",btn_save_edit:"Salvar Alterações",stat_total:"Total",stat_pending:"Pendentes",stat_done:"Concluídas",stat_today:"Hoje",filter_all:"Todas",filter_pending:"Pendentes",filter_done:"Concluídas",empty:"Nenhuma tarefa ainda.",completed_label:"Concluída",reminder_set:"Lembrete",pending_lbl:"pendentes",test_reminder:"Testar",notif_text:"Ative notificações para receber lembretes com o app fechado.",notif_btn:"Ativar",err_creds:"E-mail ou senha incorretos.",err_email_exists:"Este e-mail já está cadastrado.",ok_register:"Conta criada com sucesso! Faça o login para continuar.",err_min_pass:"Senha mínimo 6 caracteres.",err_match:"As senhas não conferem.",err_code:"Código inválido.",ok_reset:"Senha redefinida!",code_label:"O código é: ",confirm_delete:"Deletar esta tarefa?",confirm_delete_cat:"Deletar esta categoria?",confirm_delete_member:"Remover este membro?"},
+en:{tagline:"Illuminate your life",sidebar_tagline:"Task Manager",login_title:"Sign In",login_sub:"Welcome back",reg_title:"Create Account",reg_sub:"Start your journey",reg_tagline:"Create Account",verify_title:"Verify Email",verify_sub:"Enter the code you received",verify_tagline:"Verification",verify_msg:"A 6-digit code has been generated.",forgot_title:"Forgot Password",forgot_sub:"Let's reset your password",forgot_tagline:"Forgot Password",reset_title:"New Password",reset_sub:"Create a secure password",reset_tagline:"New Password",reset_code_msg:"Enter the 6-digit code:",lbl_email:"Email",lbl_pass:"Password",lbl_name:"Name",lbl_newpass:"New password",lbl_confirmpass:"Confirm password",btn_login:"Sign In",btn_register:"Create Account",btn_verify:"Verify",btn_send_code:"Send Code",btn_back_login:"Back to Login",btn_reset:"Reset Password",btn_forgot_link:"Forgot my password",link_no_account:"No account?",link_to_register:"Create account",link_have_account:"Already have an account?",link_to_login:"Sign in",link_resend:"Resend code",nav_main:"Main",nav_overview:"Overview",nav_tasks:"Tasks",nav_categories:"Categories",nav_members:"Residents",nav_records:"Records",nav_history:"History",nav_reminders:"Reminders",nav_settings:"Settings",nav_logout:"Sign Out",new_task:"+ New Task",new_cat:"+ Category",new_member:"+ Resident",greeting_morning:"Good morning",greeting_afternoon:"Good afternoon",greeting_evening:"Good evening",title_today:"Today",title_upcoming:"Upcoming",title_tasks:"All Tasks",title_categories:"Categories",title_members:"Residents",title_history:"History",title_reminders:"Reminders",title_cat_tasks:"Category Tasks",title_member_tasks:"Resident Tasks",modal_title:"New Task",modal_sub:"Add a task",modal_edit_title:"Edit Task",modal_edit_sub:"Update information",cat_modal_title:"New Category",cat_modal_sub:"Organize your work",member_modal_title:"New Resident",member_modal_sub:"Add resident",lbl_task_name:"Task name",lbl_cat:"Category",lbl_priority:"Priority",lbl_assign:"Assign to",lbl_reminder:"Reminder",lbl_notes:"Notes",lbl_cat_name:"Name",lbl_cat_icon:"Icon (emoji)",lbl_member_name:"Name",lbl_member_role:"",lbl_member_color:"Color",opt_high:"High",opt_med:"Medium",opt_low:"Low",btn_cancel:"Cancel",btn_save:"Save",btn_save_edit:"Save Changes",stat_total:"Total",stat_pending:"Pending",stat_done:"Completed",stat_today:"Today",filter_all:"All",filter_pending:"Pending",filter_done:"Completed",empty:"No tasks yet.",completed_label:"Completed",reminder_set:"Reminder",pending_lbl:"pending",test_reminder:"Test",notif_text:"Enable notifications to receive reminders when the app is closed.",notif_btn:"Enable",err_creds:"Incorrect email or password.",err_email_exists:"This email is already registered.",ok_register:"Account created! Please sign in to continue.",err_min_pass:"Password must be at least 6 characters.",err_match:"Passwords do not match.",err_code:"Invalid code.",ok_reset:"Password reset!",code_label:"The code is: ",confirm_delete:"Delete this task?",confirm_delete_cat:"Delete this category?",confirm_delete_member:"Remove this member?"},
+es:{tagline:"Illuminate your life",sidebar_tagline:"Gestor de Tareas",login_title:"Iniciar Sesión",login_sub:"Bienvenido de vuelta",reg_title:"Crear Cuenta",reg_sub:"Comienza tu camino",reg_tagline:"Crear Cuenta",verify_title:"Verificar Correo",verify_sub:"Ingresa el código recibido",verify_tagline:"Verificación",verify_msg:"Un código de 6 dígitos ha sido generado.",forgot_title:"Recuperar Contraseña",forgot_sub:"Restableceremos tu contraseña",forgot_tagline:"Recuperar Contraseña",reset_title:"Nueva Contraseña",reset_sub:"Crea una contraseña segura",reset_tagline:"Nueva Contraseña",reset_code_msg:"Ingresa el código de 6 dígitos:",lbl_email:"Correo",lbl_pass:"Contraseña",lbl_name:"Nombre",lbl_newpass:"Nueva contraseña",lbl_confirmpass:"Confirmar contraseña",btn_login:"Iniciar Sesión",btn_register:"Crear Cuenta",btn_verify:"Verificar",btn_send_code:"Enviar Código",btn_back_login:"Volver al Login",btn_reset:"Restablecer Contraseña",btn_forgot_link:"Olvidé mi contraseña",link_no_account:"¿No tienes cuenta?",link_to_register:"Crear cuenta",link_have_account:"¿Ya tienes cuenta?",link_to_login:"Iniciar sesión",link_resend:"Reenviar código",nav_main:"Principal",nav_overview:"Resumen",nav_tasks:"Tareas",nav_categories:"Categorías",nav_members:"Residentes",nav_records:"Registros",nav_history:"Historial",nav_reminders:"Recordatorios",nav_settings:"Configuración",nav_logout:"Salir",new_task:"+ Nueva Tarea",new_cat:"+ Categoría",new_member:"+ Residente",greeting_morning:"Buenos días",greeting_afternoon:"Buenas tardes",greeting_evening:"Buenas noches",title_today:"Hoy",title_upcoming:"Próximamente",title_tasks:"Todas las Tareas",title_categories:"Categorías",title_members:"Residentes",title_history:"Historial",title_reminders:"Recordatorios",title_cat_tasks:"Tareas de Categoría",title_member_tasks:"Tareas del Residente",modal_title:"Nueva Tarea",modal_sub:"Agregar tarea",modal_edit_title:"Editar Tarea",modal_edit_sub:"Actualizar información",cat_modal_title:"Nueva Categoría",cat_modal_sub:"Organiza tu trabajo",member_modal_title:"Nuevo Residente",member_modal_sub:"Agregar residente",lbl_task_name:"Nombre de la tarea",lbl_cat:"Categoría",lbl_priority:"Prioridad",lbl_assign:"Asignar a",lbl_reminder:"Recordatorio",lbl_notes:"Notas",lbl_cat_name:"Nombre",lbl_cat_icon:"Ícono (emoji)",lbl_member_name:"Nombre",lbl_member_role:"",lbl_member_color:"Color",opt_high:"Alta",opt_med:"Media",opt_low:"Baja",btn_cancel:"Cancelar",btn_save:"Guardar",btn_save_edit:"Guardar Cambios",stat_total:"Total",stat_pending:"Pendientes",stat_done:"Completadas",stat_today:"Hoy",filter_all:"Todas",filter_pending:"Pendientes",filter_done:"Completadas",empty:"No hay tareas aún.",completed_label:"Completada",reminder_set:"Recordatorio",pending_lbl:"pendientes",test_reminder:"Probar",notif_text:"Activa notificaciones para recibir recordatorios con la app cerrada.",notif_btn:"Activar",err_creds:"Correo o contraseña incorrectos.",err_email_exists:"Este correo ya está registrado.",ok_register:"¡Cuenta creada! Inicia sesión para continuar.",err_min_pass:"La contraseña debe tener al menos 6 caracteres.",err_match:"Las contraseñas no coinciden.",err_code:"Código inválido.",ok_reset:"¡Contraseña restablecida!",code_label:"El código es: ",confirm_delete:"¿Eliminar esta tarea?",confirm_delete_cat:"¿Eliminar esta categoría?",confirm_delete_member:"¿Eliminar este miembro?"}
+};
+const MEMBER_COLORS=["#c9a84c","#e07070","#70aee0","#70e0a0","#c470e0","#e0a070","#70e0d8","#a0a0a0"];
+const DEFAULT_CATS=[{id:"kitchen",icon:"🍳",name:{pt:"Cozinha",en:"Kitchen",es:"Cocina"}},{id:"living",icon:"🛋️",name:{pt:"Sala",en:"Living Room",es:"Sala"}},{id:"bedroom",icon:"🛏️",name:{pt:"Quartos",en:"Bedrooms",es:"Habitaciones"}},{id:"bathroom",icon:"🚿",name:{pt:"Banheiro",en:"Bathroom",es:"Baño"}},{id:"laundry",icon:"👕",name:{pt:"Lavanderia",en:"Laundry",es:"Lavandería"}},{id:"outdoor",icon:"🌿",name:{pt:"Área Externa",en:"Outdoor",es:"Área Externa"}}];
+const EJS={publicKey:"COLE_SUA_PUBLIC_KEY",serviceId:"COLE_SEU_SERVICE_ID",templateId:"COLE_SEU_TEMPLATE_ID"};
+let _ejsReady=false;
+function initEJS(){if(EJS.publicKey!=="COLE_SUA_PUBLIC_KEY"){emailjs.init({publicKey:EJS.publicKey});_ejsReady=true;}}
+function gerarCodigo(){return Math.floor(100000+Math.random()*900000).toString();}
+async function enviarCodigo(email,nome,tipo){
+  const codigo=gerarCodigo();window._codigoAtual=codigo;
+  if(_ejsReady){try{const assunto=tipo==="verify"?{pt:"Código de verificação — Lumière",en:"Verification code — Lumière",es:"Código de verificación — Lumière"}[lang]:{pt:"Redefinir senha — Lumière",en:"Reset password — Lumière",es:"Restablecer contraseña — Lumière"}[lang];await emailjs.send(EJS.serviceId,EJS.templateId,{to_email:email,to_name:nome||email,subject:assunto,code:codigo,app_name:"Lumière"});alert({pt:"Código enviado para "+email+"!",en:"Code sent to "+email+"!",es:"¡Código enviado a "+email+"!"}[lang]);}catch(e){alert(t("code_label")+codigo);}}
+  else{alert(t("code_label")+codigo);}
+}
+let lang="pt",currentUser=null,tasks=[],hist=[],categories=[],members=[],selAssignees=[],selCat=null,selMember=null,activeFilter="all",editingTaskId=null,selectedColor=MEMBER_COLORS[0];
+const t=k=>T[lang][k]||k;
+const g=id=>document.getElementById(id);
+const st=(id,k)=>{const e=g(id);if(e)e.textContent=t(k);};
+const loc=()=>lang==="pt"?"pt-BR":lang==="es"?"es-ES":"en-US";
+function setLang(l){lang=l;document.querySelectorAll(".lang-btn").forEach(b=>b.classList.remove("active"));document.querySelectorAll(`.lang-btn[onclick="setLang('${l}')"]`).forEach(b=>b.classList.add("active"));document.documentElement.lang=l;applyAll();}
+function applyAll(){
+  g("auth-tagline").textContent=t("tagline");
+  ["reg-tagline","verify-tagline","forgot-tagline","reset-tagline"].forEach(id=>{const k={"reg-tagline":"reg_tagline","verify-tagline":"verify_tagline","forgot-tagline":"forgot_tagline","reset-tagline":"reset_tagline"};st(id,k[id]);});
+  st("login-title","login_title");st("login-sub","login_sub");st("lbl-email","lbl_email");st("lbl-pass","lbl_pass");st("btn-login","btn_login");st("btn-forgot-link","btn_forgot_link");st("link-no-account","link_no_account");st("link-to-register","link_to_register");
+  st("reg-title","reg_title");st("reg-sub","reg_sub");st("lbl-name","lbl_name");st("lbl-email2","lbl_email");st("lbl-pass2","lbl_pass");st("btn-register","btn_register");st("link-have-account","link_have_account");st("link-to-login","link_to_login");
+  st("verify-title","verify_title");st("verify-sub","verify_sub");st("verify-msg","verify_msg");st("btn-verify","btn_verify");st("link-resend","link_resend");
+  st("forgot-title","forgot_title");st("forgot-sub","forgot_sub");st("lbl-email3","lbl_email");st("btn-send-code","btn_send_code");st("btn-back-login","btn_back_login");
+  st("reset-title","reset_title");st("reset-sub","reset_sub");st("lbl-email4","lbl_email");st("reset-code-msg","reset_code_msg");st("lbl-newpass","lbl_newpass");st("lbl-confirmpass","lbl_confirmpass");st("btn-reset","btn_reset");
+  st("sidebar-tagline","sidebar_tagline");st("nav-sec-main","nav_main");st("nav-overview","nav_overview");st("nav-tasks","nav_tasks");st("nav-categories","nav_categories");st("nav-members","nav_members");st("nav-sec-records","nav_records");st("nav-history","nav_history");st("nav-reminders","nav_reminders");st("nav-sec-settings","nav_settings");st("nav-logout","nav_logout");
+  ["btn-new-task-ov","btn-new-task-tk","btn-new-task-cat"].forEach(id=>st(id,"new_task"));
+  st("btn-new-member","new_member");st("btn-test-reminder","test_reminder");
+  st("title-today","title_today");st("title-upcoming","title_upcoming");st("page-title-tasks","title_tasks");st("page-title-categories","title_categories");st("page-title-members","title_members");st("page-title-history","title_history");st("page-title-reminders","title_reminders");st("title-cat-tasks","title_cat_tasks");st("title-member-tasks","title_member_tasks");
+  st("modal-title","modal_title");st("modal-sub","modal_sub");st("lbl-task-name","lbl_task_name");st("lbl-cat","lbl_cat");st("lbl-priority","lbl_priority");st("lbl-assign","lbl_assign");st("lbl-reminder-modal","lbl_reminder");st("lbl-notes","lbl_notes");st("opt-high","opt_high");st("opt-med","opt_med");st("opt-low","opt_low");st("btn-cancel-modal","btn_cancel");st("btn-save-modal","btn_save");
+  
+  st("member-modal-title","member_modal_title");st("member-modal-sub","member_modal_sub");st("lbl-member-name","lbl_member_name");st("lbl-member-color","lbl_member_color");st("btn-cancel-member","btn_cancel");st("btn-save-member","btn_save");
+  if(currentUser)updateGreeting();
+  renderAll();
+}
+function updateGreeting(){const h=new Date().getHours();const gr=h<12?t("greeting_morning"):h<18?t("greeting_afternoon"):t("greeting_evening");const firstName=currentUser.name.split(" ")[0];g("overview-greeting").innerHTML=gr+', <span class="accent">'+firstName+"</span>";g("overview-date").textContent=new Date().toLocaleDateString(loc(),{weekday:"long",day:"numeric",month:"long",year:"numeric"});}
+function showPage(id){document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));g(id).classList.add("active");}
+function doLogin(){const email=g("login-email").value.trim(),pass=g("login-pass").value;if(!email||!pass)return;const users=JSON.parse(localStorage.getItem("lm_users")||"{}");const user=users[email];if(!user||user.password!==pass){alert(t("err_creds"));return;}loginUser(user);}
+function loginUser(user){currentUser=user;g("sidebar-avatar").textContent=user.name[0].toUpperCase();g("sidebar-name").textContent=user.name;g("sidebar-email").textContent=user.email;loadUserData(user.email);showPage("page-app");applyAll();showView("overview");scheduleReminders();renderNotifBanners();}
+function loadUserData(email){const s=localStorage.getItem("lm_tasks_"+email);tasks=s?JSON.parse(s):[];const sh=localStorage.getItem("lm_hist_"+email);hist=sh?JSON.parse(sh):[];const sc=localStorage.getItem("lm_cats_"+email);categories=sc?JSON.parse(sc):DEFAULT_CATS.map(c=>({...c,id:c.id+"_"+Date.now()+Math.random()}));const sm=localStorage.getItem("lm_members_"+email);members=sm?JSON.parse(sm):[];}
+function saveAll(){if(!currentUser)return;localStorage.setItem("lm_tasks_"+currentUser.email,JSON.stringify(tasks));localStorage.setItem("lm_hist_"+currentUser.email,JSON.stringify(hist));localStorage.setItem("lm_cats_"+currentUser.email,JSON.stringify(categories));localStorage.setItem("lm_members_"+currentUser.email,JSON.stringify(members));}
+function doRegister(){const name=g("reg-name").value.trim(),email=g("reg-email").value.trim(),pass=g("reg-pass").value;if(!name||!email||!pass)return;if(pass.length<6){alert(t("err_min_pass"));return;}const users=JSON.parse(localStorage.getItem("lm_users")||"{}");if(users[email]){alert(t("err_email_exists"));return;}users[email]={name,email,password:pass};localStorage.setItem("lm_users",JSON.stringify(users));alert(t("ok_register"));showPage("page-login");}
+function verifyCode(){const code=Array.from(document.querySelectorAll(".vcode")).map(i=>i.value).join("");const valid=window._codigoAtual||"246810";if(code!==valid){alert(t("err_code"));return;}const users=JSON.parse(localStorage.getItem("lm_users")||"{}");users[window._pu.email]=window._pu;localStorage.setItem("lm_users",JSON.stringify(users));loginUser(window._pu);}
+function doForgot(){const email=g("forgot-email").value.trim();if(!email)return;g("reset-email").value=email;showPage("page-reset");enviarCodigo(email,"","reset");}
+function doReset(){const email=g("reset-email").value.trim();const code=Array.from(document.querySelectorAll(".rcode")).map(i=>i.value).join("");const np=g("new-pass").value,cp=g("confirm-pass").value;const valid=window._codigoAtual||"246810";if(code!==valid){alert(t("err_code"));return;}if(np!==cp){alert(t("err_match"));return;}if(np.length<6){alert(t("err_min_pass"));return;}const users=JSON.parse(localStorage.getItem("lm_users")||"{}");if(users[email]){users[email].password=np;localStorage.setItem("lm_users",JSON.stringify(users));}alert(t("ok_reset"));showPage("page-login");}
+function resendCode(){if(window._pu)enviarCodigo(window._pu.email,window._pu.name,"verify");else{const c=gerarCodigo();window._codigoAtual=c;alert(t("code_label")+c);}}
+function doLogout(){currentUser=null;tasks=[];hist=[];categories=[];members=[];showPage("page-login");}
+function codeNav(input,idx,cls){if(input.value.length===1){const ins=document.querySelectorAll("."+cls);if(idx<5)ins[idx+1].focus();}}
+function showView(name){document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));document.querySelectorAll(".nav-item").forEach(n=>n.classList.remove("active"));g("view-"+name).classList.add("active");document.querySelector(`[data-view="${name}"]`)?.classList.add("active");renderAll();}
+function renderAll(){if(!currentUser)return;updateGreeting();renderStats();renderTodayTasks();renderAllTasks();renderCategories();renderMembers();renderHistory();renderReminders();g("pending-badge").textContent=tasks.filter(x=>!x.done).length;}
+function renderStats(){const today=new Date().toISOString().split("T")[0];const total=tasks.length,pending=tasks.filter(x=>!x.done).length,done=tasks.filter(x=>x.done).length,tod=tasks.filter(x=>x.date===today).length;g("stats-row").innerHTML=[[t("stat_total"),total],[t("stat_pending"),pending],[t("stat_done"),done],[t("stat_today"),tod]].map(([l,v])=>`<div class="stat-card"><div class="stat-label">${l}</div><div class="stat-value">${v}</div></div>`).join("");}
+function getCatName(catId){const cat=categories.find(c=>c.id===catId);if(!cat)return catId;return cat.name[lang]||cat.name.pt||cat.name||catId;}
+function getCatIcon(catId){const cat=categories.find(c=>c.id===catId);return cat?cat.icon:"📌";}
+function taskHTML(task){
+  const catName=getCatName(task.category);
+  const assigneesHTML=(task.assignees||[]).map(id=>{const m=members.find(m=>m.id===id);return m?`<span class="task-member"><span class="member-dot" style="background:${m.color}"></span>${m.name}</span>`:""}).join("");
+  const dateStr=task.date?new Date(task.date+"T12:00:00").toLocaleDateString(loc(),{day:"2-digit",month:"short"}):"";
+  const rBadge=task.reminder?`<span class="task-reminder-badge">&#x1F514; ${t("reminder_set")}</span>`:"";
+  const cBadge=task.done?`<span style="font-size:.55rem;color:var(--white-dim);letter-spacing:.15em;text-transform:uppercase;font-weight:300">${t("completed_label")}</span>`:"";
+  return `<div class="task-item${task.done?" completed":""}">
+    <div class="task-priority-bar priority-${task.priority||"med"}"></div>
+    <div class="task-check${task.done?" done":""}" onclick="toggleTask(${task.id});event.stopPropagation()"></div>
+    <div class="task-body">
+      <div class="task-title-text">${task.title}</div>
+      <div class="task-meta"><span class="task-cat">${catName}</span>${assigneesHTML}${dateStr?`<span class="task-date">${dateStr}</span>`:""}${rBadge}${cBadge}</div>
+    </div>
+    <div class="task-actions">
+      <button class="task-btn" onclick="editTask(${task.id});event.stopPropagation()">&#x270E;</button>
+      <button class="task-btn del" onclick="deleteTask(${task.id});event.stopPropagation()">&#x2715;</button>
+    </div>
+  </div>`;
+}
+const emptyState=()=>`<div class="empty-state">${t("empty")}</div>`;
+function renderTodayTasks(){const today=new Date().toISOString().split("T")[0];const tod=tasks.filter(x=>x.date===today&&!x.done);g("today-tasks").innerHTML=tod.length?tod.map(taskHTML).join(""):emptyState();const up=tasks.filter(x=>x.date>today).sort((a,b)=>a.date>b.date?1:-1).slice(0,4);g("upcoming-tasks").innerHTML=up.length?up.map(taskHTML).join(""):emptyState();}
+function renderAllTasks(){renderFilters();let f=[...tasks];if(activeFilter==="pending")f=f.filter(x=>!x.done);else if(activeFilter==="done")f=f.filter(x=>x.done);else if(activeFilter!=="all")f=f.filter(x=>x.assignees?.includes(activeFilter)||x.category===activeFilter);g("all-tasks").innerHTML=f.length?f.map(taskHTML).join(""):emptyState();}
+function renderFilters(){const filters=[{key:"all",label:t("filter_all")},{key:"pending",label:t("filter_pending")},{key:"done",label:t("filter_done")},...categories.map(c=>({key:c.id,label:(c.name[lang]||c.name.pt||c.name)})),...members.map(m=>({key:m.id,label:m.name}))];g("task-filters").innerHTML=filters.map(f=>`<button class="filter-chip${activeFilter===f.key?" active":""}" onclick="setFilter('${f.key}')">${f.label}</button>`).join("");}
+function setFilter(key){activeFilter=key;renderAllTasks();}
+function renderCategories(){g("categories-grid").innerHTML=categories.map(cat=>{const count=tasks.filter(x=>x.category===cat.id&&!x.done).length;const name=cat.name[lang]||cat.name.pt||cat.name;return `<div class="cat-card${selCat===cat.id?" selected":""}" onclick="filterByCat('${cat.id}')"><div style="display:flex;justify-content:space-between;align-items:flex-start"><div class="cat-icon">${cat.icon}</div><button class="task-btn del" style="opacity:.4" onclick="deleteCat('${cat.id}');event.stopPropagation()">&#x2715;</button></div><div class="cat-name">${name}</div><div class="cat-count">${count} ${t("pending_lbl")}</div></div>`;}).join("");const ct=selCat?tasks.filter(x=>x.category===selCat):tasks;g("cat-tasks").innerHTML=ct.length?ct.map(taskHTML).join(""):emptyState();}
+function filterByCat(id){selCat=selCat===id?null:id;renderCategories();}
+function deleteCat(id){if(!confirm(t("confirm_delete_cat")))return;categories=categories.filter(c=>c.id!==id);saveAll();renderAll();}
+function renderMembers(){g("members-grid").innerHTML=members.map(m=>{const count=tasks.filter(x=>x.assignees?.includes(m.id)&&!x.done).length;return `<div class="member-card${selMember===m.id?" selected":""}" onclick="filterByMember('${m.id}')"><div style="display:flex;justify-content:space-between"><div style="flex:1"></div><button class="task-btn del" style="opacity:.4;width:20px;height:20px;font-size:.6rem" onclick="deleteMember('${m.id}');event.stopPropagation()">&#x2715;</button></div>${count>0?`<div class="member-badge-count">${count}</div>`:""}<div class="member-avatar-lg" style="background:rgba(${hexToRgb(m.color)},.12);border-color:${m.color};color:${m.color}">${m.initials}</div><div class="member-card-name">${m.name}</div><div class="member-card-role">${m.role||""}</div><div class="member-card-tasks">${count} ${t("pending_lbl")}</div></div>`;}).join("");const mt=selMember?tasks.filter(x=>x.assignees?.includes(selMember)):tasks;g("member-tasks").innerHTML=mt.length?mt.map(taskHTML).join(""):emptyState();}
+function hexToRgb(hex){const r=parseInt(hex.slice(1,3),16),g2=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);return `${r},${g2},${b}`;}
+function filterByMember(id){selMember=selMember===id?null:id;renderMembers();}
+function deleteMember(id){if(!confirm(t("confirm_delete_member")))return;members=members.filter(m=>m.id!==id);saveAll();renderAll();}
+function renderHistory(){const all=[...hist].sort((a,b)=>new Date(b.date)-new Date(a.date));g("log-list").innerHTML=all.length?all.map(log=>{const d=new Date(log.date).toLocaleDateString(loc(),{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"});return `<div class="log-item"><span class="log-date">${d}</span><span class="log-task">${log.task}</span><span class="log-user">${log.user}</span></div>`;}).join(""):emptyState();}
+function renderReminders(){const wr=tasks.filter(x=>x.reminder&&!x.done);g("reminder-list").innerHTML=wr.length?wr.map(task=>{const d=new Date(task.reminder).toLocaleDateString(loc(),{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"});return taskHTML(task)+`<div style="font-size:.6rem;color:var(--gold);margin:-6px 0 6px 44px;letter-spacing:.1em;font-weight:300">&#x1F514; ${d}</div>`;}).join(""):emptyState();}
+function renderNotifBanners(){const show="Notification"in window&&Notification.permission!=="granted";const html=show?`<div class="notif-banner"><span class="notif-text">&#x1F514; ${t("notif_text")}</span><button class="btn-notif" onclick="askNotif()">${t("notif_btn")}</button></div>`:"";["notif-banner-ov","notif-banner-rm"].forEach(id=>{if(g(id))g(id).innerHTML=html;});}
+function askNotif(){Notification.requestPermission().then(()=>renderNotifBanners());}
+function toggleTask(id){const task=tasks.find(x=>x.id===id);if(!task)return;task.done=!task.done;task.completedAt=task.done?new Date().toISOString():null;if(task.done){hist.unshift({date:task.completedAt,task:task.title,user:(task.assignees||[]).map(id=>members.find(m=>m.id===id)?.name||id).join(", ")||"-"});if(hist.length>100)hist.pop();}saveAll();renderAll();}
+function deleteTask(id){if(!confirm(t("confirm_delete")))return;tasks=tasks.filter(x=>x.id!==id);saveAll();renderAll();}
+function editTask(id){
+  const task=tasks.find(x=>x.id===id);if(!task)return;
+  editingTaskId=id;
+  g("task-cat-select").innerHTML=categories.map(c=>`<option value="${c.id}">${c.name[lang]||c.name.pt||c.name}</option>`).join("");
+  g("opt-high").textContent=t("opt_high");g("opt-med").textContent=t("opt_med");g("opt-low").textContent=t("opt_low");
+  selAssignees=[...(task.assignees||[])];
+  g("assignees-grid").innerHTML=members.length?members.map(m=>`<div class="assignee-option${selAssignees.includes(m.id)?" selected":""}" id="ao-${m.id}" onclick="toggleAssignee('${m.id}')"><span class="mini-av" style="border-color:${m.color};color:${m.color}">${m.initials}</span>${m.name}</div>`).join(""):`<div style="font-size:.75rem;color:var(--white-dim);padding:.5rem;font-weight:300">${lang==="pt"?"Adicione membros primeiro.":lang==="es"?"Agrega miembros primero.":"Add members first."}</div>`;
+  g("task-name-input").value=task.title;g("task-cat-select").value=task.category;g("task-priority-select").value=task.priority||"med";g("task-notes").value=task.notes||"";g("task-reminder").value=task.reminder?task.reminder.slice(0,16):"";
+  g("modal-title").textContent=t("modal_edit_title");g("modal-sub").textContent=t("modal_edit_sub");g("btn-save-modal").textContent=t("btn_save_edit");
+  g("task-modal").classList.add("open");
+}
+function openModal(){
+  editingTaskId=null;selAssignees=[];
+  if(categories.length===0){alert(lang==="pt"?"Crie uma categoria primeiro!":lang==="es"?"¡Crea una categoría primero!":"Create a category first!");showView("categories");return;}
+  g("task-cat-select").innerHTML=categories.map(c=>`<option value="${c.id}">${c.name[lang]||c.name.pt||c.name}</option>`).join("");
+  g("opt-high").textContent=t("opt_high");g("opt-med").textContent=t("opt_med");g("opt-low").textContent=t("opt_low");
+  g("assignees-grid").innerHTML=members.length?members.map(m=>`<div class="assignee-option" id="ao-${m.id}" onclick="toggleAssignee('${m.id}')"><span class="mini-av" style="border-color:${m.color};color:${m.color}">${m.initials}</span>${m.name}</div>`).join(""):`<div style="font-size:.75rem;color:var(--white-dim);padding:.5rem;font-weight:300">${lang==="pt"?"Adicione membros primeiro.":lang==="es"?"Agrega miembros primero.":"Add members first."}</div>`;
+  g("task-name-input").value="";g("task-notes").value="";g("task-reminder").value="";
+  g("modal-title").textContent=t("modal_title");g("modal-sub").textContent=t("modal_sub");g("btn-save-modal").textContent=t("btn_save");
+  g("task-modal").classList.add("open");
+}
+function closeModal(){editingTaskId=null;g("task-modal").classList.remove("open");}
+function toggleAssignee(id){const e=g("ao-"+id);if(selAssignees.includes(id)){selAssignees=selAssignees.filter(a=>a!==id);e.classList.remove("selected");}else{selAssignees.push(id);e.classList.add("selected");}}
+function saveTask(){
+  const title=g("task-name-input").value.trim();if(!title)return;
+  const cat=g("task-cat-select").value,priority=g("task-priority-select").value,reminder=g("task-reminder").value,notes=g("task-notes").value;
+  if(editingTaskId){const task=tasks.find(x=>x.id===editingTaskId);if(task){task.title=title;task.category=cat;task.priority=priority;task.assignees=[...selAssignees];task.notes=notes;task.reminder=reminder?new Date(reminder).toISOString():null;if(task.reminder){const ms=new Date(task.reminder)-Date.now();if(ms>0)setTimeout(()=>fireReminder(task.title),ms);}}editingTaskId=null;}
+  else{const nt={id:Date.now(),title,category:cat,priority,assignees:[...selAssignees],done:false,date:new Date().toISOString().split("T")[0],notes,reminder:reminder?new Date(reminder).toISOString():null,completedAt:null};tasks.unshift(nt);if(nt.reminder){const ms=new Date(nt.reminder)-Date.now();if(ms>0)setTimeout(()=>fireReminder(nt.title),ms);}}
+  saveAll();closeModal();renderAll();
+}
+function openCatModal(){g("cat-name-input").value="";g("cat-icon-input").value="";g("cat-modal").classList.add("open");}
+function closeCatModal(){g("cat-modal").classList.remove("open");}
+function saveCat(){const name=g("cat-name-input").value.trim(),icon=g("cat-icon-input").value.trim()||"📌";if(!name)return;const id="cat_"+Date.now();categories.push({id,icon,name:{pt:name,en:name,es:name}});saveAll();closeCatModal();renderAll();}
+function openMemberModal(){selectedColor=MEMBER_COLORS[0];g("member-name-input").value="";g("color-picker").innerHTML=MEMBER_COLORS.map((c,i)=>`<div class="color-swatch${i===0?" selected":""}" style="background:${c}" onclick="selectColor('${c}',this)"></div>`).join("");g("member-modal").classList.add("open");}
+function closeMemberModal(){g("member-modal").classList.remove("open");}
+function selectColor(color,el){selectedColor=color;document.querySelectorAll(".color-swatch").forEach(s=>s.classList.remove("selected"));el.classList.add("selected");}
+function saveMember(){const name=g("member-name-input").value.trim();if(!name)return;const initials=name.split(" ").map(w=>w[0]).join("").slice(0,2).toUpperCase();members.push({id:"mbr_"+Date.now(),name,color:selectedColor,initials});saveAll();closeMemberModal();renderAll();}
+function scheduleReminders(){tasks.forEach(task=>{if(!task.reminder||task.done)return;const ms=new Date(task.reminder)-Date.now();if(ms>0&&ms<86400000)setTimeout(()=>fireReminder(task.title),ms);});}
+function fireReminder(title){playChime();g("toast-body").textContent=title;g("toast-time").textContent=new Date().toLocaleTimeString(loc());g("reminder-toast").classList.add("show");setTimeout(()=>g("reminder-toast").classList.remove("show"),8000);if("Notification"in window&&Notification.permission==="granted"){new Notification("Lumière \uD83D\uDD14",{body:title,icon:"icon-192.png"});}}
+function testReminder(){fireReminder(tasks[0]?.title||"Lumière — Reminder");}
+function closeToast(){g("reminder-toast").classList.remove("show");}
+function playChime(){try{const ctx=new(window.AudioContext||window.webkitAudioContext)();[[523.25,0],[659.25,.2],[783.99,.4],[1046.5,.6],[1174.66,.85]].forEach(([freq,time])=>{const osc=ctx.createOscillator(),gain=ctx.createGain();osc.connect(gain);gain.connect(ctx.destination);osc.type="sine";osc.frequency.setValueAtTime(freq,ctx.currentTime+time);gain.gain.setValueAtTime(0,ctx.currentTime+time);gain.gain.linearRampToValueAtTime(.22,ctx.currentTime+time+.04);gain.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+time+.7);osc.start(ctx.currentTime+time);osc.stop(ctx.currentTime+time+.75);});}catch(e){}}
+if("serviceWorker"in navigator){navigator.serviceWorker.register("sw.js").catch(()=>{});}
+document.addEventListener("DOMContentLoaded",()=>{initEJS();applyAll();});
+</script>
+</body>
+</html>
